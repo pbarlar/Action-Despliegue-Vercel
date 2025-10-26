@@ -1,7 +1,7 @@
 /**
  * @fileoverview Lógica principal para la aplicación de Lista de Tareas (To-Do List).
  * Maneja la adición, eliminación y marcado de tareas como completadas.
- * @author Tu Nombre (Opcional)
+ * @author Pablo Barranco
  * @version 1.0.0
  */
 
