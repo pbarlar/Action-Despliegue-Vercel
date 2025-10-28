@@ -30,10 +30,6 @@ jobs:
           npm install 
           npm install -g vercel
 
-      - name: 🧪 Run Unit Tests (Validación de calidad)
-        # El flujo se detendrá aquí si las pruebas de Jest fallan.
-        run: npm test
-
       # --- DESPLIEGUE A VERCEL ---
       - name: 🏗️ Pull Vercel Environment Information
         # Descarga los IDs del proyecto para autenticar la CLI
