@@ -21,7 +21,12 @@ jobs:
     steps:
       - name: 1. Checkout del código
         uses: actions/checkout@v4
-
+        
+      
+      - name: 1.5. Limpiar configuración local de Vercel
+        run: rm -rf .vercel
+        # Este comando elimina cualquier configuración de enlace previa, forzando un despliegue limpio.
+        
       - name: 2. Configurar Node.js e Instalar JSDoc
         uses: actions/setup-node@v4
         with:
