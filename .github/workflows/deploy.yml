@@ -1,20 +1,15 @@
-name: Deploy Web Application to Vercel
+name: Deploy JSDoc Documentation to Vercel
 
 on:
   push:
     branches:
       - main
       - master
-  workflow_dispatch: # Permite ejecutar el workflow manualmente
+  workflow_dispatch: # Permite ejecución manual
 
 jobs:
-  test_and_deploy:
+  generate_and_deploy_docs:
     runs-on: ubuntu-latest
-    
-    # Define un entorno para mayor seguridad y seguimiento
-    environment: 
-      name: production
-      url: ${{ steps.deploy.outputs.url }}
 
     steps:
       - name: 🛑 Checkout code
@@ -25,30 +20,32 @@ jobs:
         with:
           node-version: '20'
 
-      - name: 📦 Install dependencies (Jest, Vercel CLI)
+      - name: 📦 Install JSDoc and Vercel CLI
         run: |
-          npm install 
-          npm install -g vercel
+          npm install -g jsdoc # Necesario para generar la documentación
+          npm install -g vercel # Necesario para el despliegue
+
+      - name: 📄 Generate JSDoc Documentation
+        run: |
+          # Crea la carpeta 'docs' y genera el HTML de documentación
+          mkdir -p docs 
+          jsdoc js -r -d docs
 
       # --- DESPLIEGUE A VERCEL ---
-      - name: 🏗️ Pull Vercel Environment Information
-        # Descarga los IDs del proyecto para autenticar la CLI
-        run: vercel pull --yes --environment=production
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-
-      - name: 🌐 Deploy Root Directory to Vercel
+      - name: 🌐 Deploy Documentation to Vercel
         id: deploy
         run: |
-          # Vercel despliega el directorio actual (la raíz del repositorio) 
-          # donde se encuentra el index.html
-          # La bandera --prebuilt se usa para sitios estáticos/simples
-          OUTPUT=$(vercel deploy --prod --prebuilt)
+          # Vercel pull es necesario para vincular el entorno y obtener la configuración
+          vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
+
+          # Despliega el contenido de la carpeta 'docs' (la documentación HTML/CSS)
+          OUTPUT=$(vercel deploy ./docs --prod --prebuilt \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --scope ${{ secrets.VERCEL_ORG_ID }} \
+            --project ${{ secrets.VERCEL_PROJECT_ID }})
+            
           echo "Vercel deployment URL: $OUTPUT"
-          
-          # Extrae la URL de despliegue para usarla en el entorno (opcional)
-          echo "url=$OUTPUT" >> $GITHUB_OUTPUT 
+          echo "url=$(echo $OUTPUT | tail -n 1)" >> $GITHUB_OUTPUT
         env:
+          # VERCEL_TOKEN es la única variable de entorno requerida en este bloque
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
