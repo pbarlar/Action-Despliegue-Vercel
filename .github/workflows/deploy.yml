@@ -5,12 +5,13 @@ on:
     branches:
       - main
       - master
-  workflow_dispatch:
+  workflow_dispatch: # Permite la ejecución manual
 
 jobs:
   document_and_deploy:
     runs-on: ubuntu-latest
     
+    # Define las variables de entorno para el acceso a Vercel
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -19,29 +20,32 @@ jobs:
       - name: 1. Checkout del código
         uses: actions/checkout@v4
 
-      # === 🔑 PASO DE LIMPIEZA CRUCIAL ===
-      - name: 1.5. Limpiar configuración local de Vercel
-        # Esto elimina la carpeta .vercel inválida que causa el error "Could not retrieve Project Settings"
+      # === 🔑 PASO CRUCIAL DE LIMPIEZA ===
+      - name: 1.5. Eliminar configuración local de Vercel
+        # Esto elimina la carpeta .vercel inválida, forzando un nuevo enlace correcto.
         run: rm -rf .vercel
-        
-      - name: 2. Configurar Node.js e Instalar JSDoc
+
+      - name: 2. Configurar Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 3. Instalar dependencias (JSDoc, Vercel CLI)
+      - name: 3. Instalar dependencias (JSDoc y Vercel CLI)
+        # Instalamos las herramientas que necesitamos globalmente
         run: |
           npm install 
           npm install -g jsdoc
           npm install -g vercel
 
-      - name: 4. Generar Documentación
+      - name: 4. Generar Documentación (en carpeta 'docs/')
         run: |
           echo "Generando documentación con JSDoc..."
+          # Crea la carpeta de destino
           mkdir -p docs 
+          # Comando directo de JSDoc para generar la documentación de tu carpeta 'js'
           jsdoc js -r -d docs
 
       - name: 5. Desplegar la Documentación en Vercel
-        # Al no haber carpeta .vercel, este comando autentica con el token y crea el enlace
-        # implícitamente de forma correcta.
+        id: deploy
+        # Usamos npx vercel deploy sin la carpeta .vercel para forzar un enlace limpio
         run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} ./docs
