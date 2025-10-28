@@ -41,16 +41,11 @@ jobs:
       - name: 🌐 Deploy Documentation to Vercel
         id: deploy
         run: |
-          # 1. AUTENTICACIÓN: (Este paso ya funciona)
+          # 1. AUTENTICACIÓN: (Funciona correctamente)
           vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
 
-          # 2. DESPLIEGUE: Pasamos la variable de entorno para forzar el despliegue estático 
-          # y usamos la barra invertida para la concatenación correcta.
-          OUTPUT=$(vercel deploy ./docs --prod --prebuilt --yes \
-            --token ${{ secrets.VERCEL_TOKEN }} \
-            --scope ${{ secrets.VERCEL_ORG_ID }} \
-            --project ${{ secrets.VERCEL_PROJECT_ID }} \
-            --build-env VERCEL_FORCE_NO_BUILD=1) # Nuevo argumento clave
+          
+          OUTPUT=$(vercel deploy ./docs --prod --prebuilt --yes --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }} --project ${{ secrets.VERCEL_PROJECT_ID }} --build-env VERCEL_FORCE_NO_BUILD=1)
             
           echo "Vercel deployment URL: $OUTPUT"
           
