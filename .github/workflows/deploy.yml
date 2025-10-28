@@ -41,21 +41,20 @@ jobs:
       - name: 🌐 Deploy Documentation to Vercel
         id: deploy
         run: |
-          # 1. AUTENTICACIÓN: Usamos 'vercel pull' para autenticar con el token 
-          # y vincular el entorno, lo que descarga el project.json necesario.
+          # 1. AUTENTICACIÓN: (Este paso ya funciona)
           vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
 
-          # 2. DESPLIEGUE: Despliega la carpeta 'docs', pasando el token y los IDs 
-          # explícitamente y usando '--yes' para confirmar automáticamente.
+          # 2. DESPLIEGUE: Pasamos la variable de entorno para forzar el despliegue estático 
+          # y usamos la barra invertida para la concatenación correcta.
           OUTPUT=$(vercel deploy ./docs --prod --prebuilt --yes \
             --token ${{ secrets.VERCEL_TOKEN }} \
             --scope ${{ secrets.VERCEL_ORG_ID }} \
-            --project ${{ secrets.VERCEL_PROJECT_ID }})
+            --project ${{ secrets.VERCEL_PROJECT_ID }} \
+            --build-env VERCEL_FORCE_NO_BUILD=1) # Nuevo argumento clave
             
           echo "Vercel deployment URL: $OUTPUT"
           
           # 3. OUTPUT: Captura la URL del despliegue.
           echo "url=$(echo $OUTPUT | tail -n 1)" >> $GITHUB_OUTPUT
         env:
-          # El token es crucial para la autenticación en ambos comandos
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
