@@ -47,5 +47,5 @@ jobs:
 
       - name: 5. Desplegar la Documentación en Vercel
         id: deploy
-        # Usamos npx vercel deploy sin la carpeta .vercel para forzar un enlace limpio
-        run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} ./docs
+        # ¡CORRECCIÓN FINAL! Usamos --force para resolver el conflicto de enlace en la nube.
+        run: npx vercel deploy --prod --force --token=${{ secrets.VERCEL_TOKEN }} ./docs
