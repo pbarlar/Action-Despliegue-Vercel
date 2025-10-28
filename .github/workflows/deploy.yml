@@ -41,11 +41,17 @@ jobs:
       - name: 🌐 Deploy Documentation to Vercel
         id: deploy
         run: |
-          # 1. AUTENTICACIÓN: (Funciona correctamente)
+          # 1. AUTENTICACIÓN: (Este paso funciona correctamente)
           vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
 
-          
-          OUTPUT=$(vercel deploy ./docs --prod --prebuilt --yes --token ${{ secrets.VERCEL_TOKEN }} --scope ${{ secrets.VERCEL_ORG_ID }} --project ${{ secrets.VERCEL_PROJECT_ID }} --build-env VERCEL_FORCE_NO_BUILD=1)
+          # 2. DESPLIEGUE FINAL: Usamos 'sh -c' para forzar que el comando largo se ejecute 
+          # como una única cadena, evitando problemas con saltos de línea y sintaxis.
+          # También aseguramos la solución del error --prebuilt con VERCEL_FORCE_NO_BUILD.
+          OUTPUT=$(sh -c "vercel deploy ./docs --prod --prebuilt --yes \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --scope ${{ secrets.VERCEL_ORG_ID }} \
+            --project ${{ secrets.VERCEL_PROJECT_ID }} \
+            --build-env VERCEL_FORCE_NO_BUILD=1")
             
           echo "Vercel deployment URL: $OUTPUT"
           
