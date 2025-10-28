@@ -1,0 +1,58 @@
+name: Deploy Web Application to Vercel
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Permite ejecutar el workflow manualmente
+
+jobs:
+  test_and_deploy:
+    runs-on: ubuntu-latest
+    
+    # Define un entorno para mayor seguridad y seguimiento
+    environment: 
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: 🛑 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Install dependencies (Jest, Vercel CLI)
+        run: |
+          npm install 
+          npm install -g vercel
+
+      - name: 🧪 Run Unit Tests (Validación de calidad)
+        # El flujo se detendrá aquí si las pruebas de Jest fallan.
+        run: npm test
+
+      # --- DESPLIEGUE A VERCEL ---
+      - name: 🏗️ Pull Vercel Environment Information
+        # Descarga los IDs del proyecto para autenticar la CLI
+        run: vercel pull --yes --environment=production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: 🌐 Deploy Root Directory to Vercel
+        id: deploy
+        run: |
+          # Vercel despliega el directorio actual (la raíz del repositorio) 
+          # donde se encuentra el index.html
+          # La bandera --prebuilt se usa para sitios estáticos/simples
+          OUTPUT=$(vercel deploy --prod --prebuilt)
+          echo "Vercel deployment URL: $OUTPUT"
+          
+          # Extrae la URL de despliegue para usarla en el entorno (opcional)
+          echo "url=$OUTPUT" >> $GITHUB_OUTPUT 
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
