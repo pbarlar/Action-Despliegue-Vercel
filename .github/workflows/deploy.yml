@@ -5,50 +5,43 @@ on:
     branches:
       - main
       - master
-  workflow_dispatch: # Permite la ejecución manual
+  workflow_dispatch:
 
 jobs:
   document_and_deploy:
     runs-on: ubuntu-latest
     
-    # Secrets Vercel (Solo necesitamos el VERCEL_TOKEN para el despliegue directo con npx)
     env:
-      # Aunque solo necesitamos el token, a veces Vercel requiere estos si ya se vincularon.
-      # Los mantenemos como seguridad, pero el VERCEL_TOKEN es el más crítico.
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     steps:
       - name: 1. Checkout del código
         uses: actions/checkout@v4
-        
-      
+
+      # === 🔑 PASO DE LIMPIEZA CRUCIAL ===
       - name: 1.5. Limpiar configuración local de Vercel
+        # Esto elimina la carpeta .vercel inválida que causa el error "Could not retrieve Project Settings"
         run: rm -rf .vercel
-        # Este comando elimina cualquier configuración de enlace previa, forzando un despliegue limpio.
         
       - name: 2. Configurar Node.js e Instalar JSDoc
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 3. Instalar dependencias (JSDoc)
-        # Instalamos localmente (npm install) para obtener JSDoc si está en devDependencies,
-        # y si no, lo instalamos con -g para asegurar.
+      - name: 3. Instalar dependencias (JSDoc, Vercel CLI)
         run: |
           npm install 
-          npm install -g jsdoc # Instalación de respaldo para JSDoc
-          npm install -g vercel # Instalación de Vercel CLI (necesario para npx vercel)
+          npm install -g jsdoc
+          npm install -g vercel
 
       - name: 4. Generar Documentación
         run: |
           echo "Generando documentación con JSDoc..."
-          # Crea la carpeta 'docs' y genera el HTML de documentación
           mkdir -p docs 
-          # Comando directo de JSDoc para generar la documentación de tu carpeta 'js'
           jsdoc js -r -d docs
 
       - name: 5. Desplegar la Documentación en Vercel
-        # Usamos el método simple de tu compañero: 'npx vercel deploy'
-        # Esto despliega directamente el contenido de la carpeta './docs'
+        # Al no haber carpeta .vercel, este comando autentica con el token y crea el enlace
+        # implícitamente de forma correcta.
         run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} ./docs
