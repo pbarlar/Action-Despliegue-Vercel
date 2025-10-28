@@ -8,54 +8,42 @@ on:
   workflow_dispatch: # Permite la ejecución manual
 
 jobs:
-  generate_and_deploy_docs:
+  document_and_deploy:
     runs-on: ubuntu-latest
     
-    # Opcional: Establece un entorno para un mejor seguimiento en GitHub
-    environment:
-      name: documentation
-      url: ${{ steps.deploy.outputs.url }}
+    # Secrets Vercel (Solo necesitamos el VERCEL_TOKEN para el despliegue directo con npx)
+    env:
+      # Aunque solo necesitamos el token, a veces Vercel requiere estos si ya se vincularon.
+      # Los mantenemos como seguridad, pero el VERCEL_TOKEN es el más crítico.
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     steps:
-      - name: 🛑 Checkout code
+      - name: 1. Checkout del código
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup Node.js
+      - name: 2. Configurar Node.js e Instalar JSDoc
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 📦 Install JSDoc and Vercel CLI
-        # Instalamos las herramientas que necesitamos globalmente
+      - name: 3. Instalar dependencias (JSDoc)
+        # Instalamos localmente (npm install) para obtener JSDoc si está en devDependencies,
+        # y si no, lo instalamos con -g para asegurar.
         run: |
-          npm install -g jsdoc 
-          npm install -g vercel
+          npm install 
+          npm install -g jsdoc # Instalación de respaldo para JSDoc
+          npm install -g vercel # Instalación de Vercel CLI (necesario para npx vercel)
 
-      - name: 📄 Generate JSDoc Documentation
+      - name: 4. Generar Documentación
         run: |
+          echo "Generando documentación con JSDoc..."
           # Crea la carpeta 'docs' y genera el HTML de documentación
           mkdir -p docs 
+          # Comando directo de JSDoc para generar la documentación de tu carpeta 'js'
           jsdoc js -r -d docs
 
-      # --- DESPLIEGUE A VERCEL ---
-      - name: 🌐 Deploy Documentation to Vercel
-        id: deploy
-        run: |
-          # 1. AUTENTICACIÓN: (Este paso funciona correctamente)
-          vercel pull --yes --environment=production --token ${{ secrets.VERCEL_TOKEN }}
-
-          # 2. DESPLIEGUE FINAL: Usamos 'sh -c' para forzar que el comando largo se ejecute 
-          # como una única cadena, evitando problemas con saltos de línea y sintaxis.
-          # También aseguramos la solución del error --prebuilt con VERCEL_FORCE_NO_BUILD.
-          OUTPUT=$(sh -c "vercel deploy ./docs --prod --prebuilt --yes \
-            --token ${{ secrets.VERCEL_TOKEN }} \
-            --scope ${{ secrets.VERCEL_ORG_ID }} \
-            --project ${{ secrets.VERCEL_PROJECT_ID }} \
-            --build-env VERCEL_FORCE_NO_BUILD=1")
-            
-          echo "Vercel deployment URL: $OUTPUT"
-          
-          # 3. OUTPUT: Captura la URL del despliegue.
-          echo "url=$(echo $OUTPUT | tail -n 1)" >> $GITHUB_OUTPUT
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - name: 5. Desplegar la Documentación en Vercel
+        # Usamos el método simple de tu compañero: 'npx vercel deploy'
+        # Esto despliega directamente el contenido de la carpeta './docs'
+        run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} ./docs
