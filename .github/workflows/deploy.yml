@@ -1,10 +1,6 @@
 name: Deploy JSDoc Documentation to Vercel
 
 on:
-  push:
-    branches:
-      - main
-      - master
   workflow_dispatch: # Permite la ejecución manual
 
 jobs:
