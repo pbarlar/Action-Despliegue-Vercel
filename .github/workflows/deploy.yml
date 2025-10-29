@@ -6,11 +6,6 @@ on:
 jobs:
   document_and_deploy:
     runs-on: ubuntu-latest
-    
-    # Define las variables de entorno para el acceso a Vercel
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
     steps:
       - name: 1. Checkout del código
@@ -40,4 +35,4 @@ jobs:
 
       - name: 5. Desplegar la Documentación en Vercel
         id: deploy
-        run: npx vercel deploy --prod --force --token=${{ secrets.VERCEL_TOKEN }} ./docs
+        run: vercel --prod -yes --token=${{ secrets.VERCEL_TOKEN }} ./docs
