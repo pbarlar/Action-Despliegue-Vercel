@@ -20,9 +20,7 @@ jobs:
       - name: 1. Checkout del código
         uses: actions/checkout@v4
 
-      # === 🔑 PASO CRUCIAL DE LIMPIEZA ===
       - name: 1.5. Eliminar configuración local de Vercel
-        # Esto elimina la carpeta .vercel inválida, forzando un nuevo enlace correcto.
         run: rm -rf .vercel
 
       - name: 2. Configurar Node.js
@@ -31,7 +29,6 @@ jobs:
           node-version: '20'
 
       - name: 3. Instalar dependencias (JSDoc y Vercel CLI)
-        # Instalamos las herramientas que necesitamos globalmente
         run: |
           npm install 
           npm install -g jsdoc
@@ -47,5 +44,4 @@ jobs:
 
       - name: 5. Desplegar la Documentación en Vercel
         id: deploy
-        # ¡CORRECCIÓN FINAL! Usamos --force para resolver el conflicto de enlace en la nube.
         run: npx vercel deploy --prod --force --token=${{ secrets.VERCEL_TOKEN }} ./docs
